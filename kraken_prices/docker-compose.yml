@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "4000:4000"
+    environment:
+      - MIX_ENV=prod
+      - PORT=4000
+    volumes:
+      - .:/app
+      - /app/deps
+      - /app/_build
+    command: ["/app/bin/kraken_prices", "start"]
+    restart: unless-stopped 
