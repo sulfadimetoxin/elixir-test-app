@@ -36,4 +36,4 @@ jobs:
     - name: Install dependencies
       run: cd kraken_prices && mix deps.get
     - name: Run tests
-      run: mix test
+      run: cd kraken_prices && mix test
