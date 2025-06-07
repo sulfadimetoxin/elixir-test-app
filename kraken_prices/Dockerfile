@@ -1,63 +1,39 @@
-FROM hexpm/elixir:1.15.7-erlang-26.2.1-debian-bullseye-20231009 as build
+FROM elixir:1.15.8
 
-# Install build dependencies
-RUN apt-get update -y && apt-get install -y build-essential git curl \
-    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+# Install Node.js and npm
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get update \
     && apt-get install -y nodejs \
-    && apt-get clean && rm -f /var/lib/apt/lists/*_*
+    && npm install -g npm@latest
 
-# Prepare build dir
+RUN mkdir /app
 WORKDIR /app
 
-# Install hex + rebar
+# Install hex and rebar
 RUN mix local.hex --force && \
     mix local.rebar --force
 
-# Install mix dependencies
+# Copy only the files needed for dependency installation
 COPY mix.exs mix.lock ./
-RUN mix deps.get --only prod
-RUN MIX_ENV=prod mix deps.compile
+RUN mix deps.get
 
-# Copy config files first
-COPY config config
-
-# Build assets
-COPY assets assets
+# Install and build assets
+COPY assets/package.json ./assets/
 RUN cd assets && npm install
-RUN MIX_ENV=prod mix assets.deploy
 
-# Build project
-COPY priv priv
-COPY lib lib
-RUN MIX_ENV=prod mix compile
+# Copy the rest of the application
+COPY . .
 
-# Build the release
-RUN MIX_ENV=prod mix release kraken_prices
+# Ensure asset directories exist
+RUN mkdir -p assets/js assets/css assets/vendor priv/static/assets
 
-# Start a new build stage
-FROM debian:bullseye-slim
+# Compile dependencies and build assets
+RUN mix deps.compile
+RUN mix assets.setup
+RUN mix assets.build
 
-RUN apt-get update -y && apt-get install -y libstdc++6 openssl libncurses5 locales \
-    && apt-get clean && rm -f /var/lib/apt/lists/*_*
+# Set default environment variables
+ENV SECRET_KEY_BASE="zbBHEQpUthm8eti6nr+hGrPPY0/nkDNMn68S2v62GRCsf2wGqi6zQ5uqL3FbWaWl"
+ENV PHX_SERVER=true
 
-# Set the locale
-RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
-
-ENV LANG en_US.UTF-8
-ENV LANGUAGE en_US:en
-ENV LC_ALL en_US.UTF-8
-
-WORKDIR /app
-
-# Copy the release from the build stage
-COPY --from=build /app/_build/prod/rel/kraken_prices ./
-
-# Debug: List contents of the release directory
-RUN ls -la /app
-
-# Set environment variables
-ENV MIX_ENV=prod
-ENV PORT=4000
-
-# Run the Phoenix app
-CMD ["bin/kraken_prices", "start"] 
+CMD ["mix", "phx.server"]

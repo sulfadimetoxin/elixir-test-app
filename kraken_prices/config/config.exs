@@ -8,7 +8,6 @@
 import Config
 
 config :kraken_prices,
-  ecto_repos: [KrakenPrices.Repo],
   generators: [timestamp_type: :utc_datetime]
 
 # Configures the endpoint
@@ -36,9 +35,8 @@ config :kraken_prices, KrakenPrices.Mailer, adapter: Swoosh.Adapters.Local
 # Configure esbuild (the version is required)
 config :esbuild,
   version: "0.17.11",
-  kraken_prices: [
-    args:
-      ~w(js/app.js --bundle --target=es2017 --outdir=../priv/static/assets --external:/fonts/* --external:/images/*),
+  default: [
+    args: ~w(js/app.js --bundle --target=es2017 --outdir=../priv/static/assets --external:/fonts/* --external:/images/*),
     cd: Path.expand("../assets", __DIR__),
     env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
   ]
@@ -46,7 +44,7 @@ config :esbuild,
 # Configure tailwind (the version is required)
 config :tailwind,
   version: "3.4.6",
-  kraken_prices: [
+  default: [
     args: ~w(
       --config=tailwind.config.js
       --input=css/app.css
@@ -57,7 +55,7 @@ config :tailwind,
 
 # Configures Elixir's Logger
 config :logger, :console,
-  format: "$time $metadata[$level] $module.$function/$arity: $message\n",
+  format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
 
 # Use Jason for JSON parsing in Phoenix

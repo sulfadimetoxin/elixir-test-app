@@ -149,7 +149,7 @@ defmodule KrakenPrices.Kraken.WebSocket do
   end
 
   @impl WebSockex
-  def handle_disconnect(%{reason: {:remote, :closed}} = disconnect_map, state) do
+  def handle_disconnect(%{reason: {:remote, :closed}} = _disconnect_map, state) do
     Logger.warning("Connection closed by server. Attempting to reconnect...")
     Process.sleep(1000)  # Wait a bit before reconnecting
     {:reconnect, state}
@@ -163,17 +163,17 @@ defmodule KrakenPrices.Kraken.WebSocket do
   end
 
   @impl WebSockex
-  def terminate(reason, state) do
+  def terminate(reason, _state) do
     Logger.warning("WebSocket terminating: #{inspect(reason)}")
     :ok
   end
 
-  defp handle_message(%{"method" => "subscribe", "success" => true, "result" => %{"channel" => "instrument"}} = msg, state) do
+  defp handle_message(%{"method" => "subscribe", "success" => true, "result" => %{"channel" => "instrument"}} = _msg, state) do
     # Logger.info("Successfully subscribed to instrument channel: #{inspect(msg)}")
     {:ok, state}
   end
 
-  defp handle_message(%{"method" => "subscribe", "success" => true, "result" => %{"channel" => "ticker"}} = msg, state) do
+  defp handle_message(%{"method" => "subscribe", "success" => true, "result" => %{"channel" => "ticker"}} = _msg, state) do
     # Logger.info("Successfully subscribed to ticker channel: #{inspect(msg)}")
     {:ok, state}
   end

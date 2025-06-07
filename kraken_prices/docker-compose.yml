@@ -11,8 +11,16 @@ services:
       - MIX_ENV=prod
       - PORT=4000
     volumes:
-      - .:/app
-      - /app/deps
-      - /app/_build
-    command: ["/app/bin/kraken_prices", "start"]
+      - ./assets/css:/app/assets/css
+      - ./assets/js:/app/assets/js
+      - ./assets/static:/app/assets/static
+      - ./assets/.babelrc:/app/assets/.babelrc
+      - ./assets/package.json:/app/assets/package.json
+      - ./assets/webpack.config.js:/app/assets/webpack.config.js
+      - ./config:/app/config
+      - ./lib:/app/lib
+      - ./priv:/app/priv
+      - ./mix.exs:/app/mix.exs
+      - ./mix.lock:/app/mix.lock
+      - ./test:/app/test
     restart: unless-stopped 

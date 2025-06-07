@@ -4,10 +4,18 @@ A real-time cryptocurrency price viewer for the Kraken exchange, built with Elix
 
 ## Features
 
-- Real-time price updates via WebSocket connection
-- Displays best ask, best bid, last trade, and volume for all trading pairs
+- Real-time price updates via WebSocket connection to Kraken
+- Displays comprehensive trading information:
+  - Last trade price with 24h change percentage
+  - Best ask and bid prices
+  - 24h high and low prices
+  - Trading volume
+  - Price history (last 3 updates)
+- Paginated view of trading pairs (12 pairs per page)
 - Modern, responsive UI with Tailwind CSS
 - Docker support for easy deployment
+- Live price updates with color-coded price changes
+- Timezone-aware timestamps (Europe/Kyiv)
 
 ## Requirements
 
@@ -38,14 +46,9 @@ Visit [`localhost:4000`](http://localhost:4000) in your browser.
 
 ## Running with Docker
 
-1. Build the Docker image:
+1. Build the Docker image and Run the container:
 ```bash
-docker build -t kraken_prices .
-```
-
-2. Run the container:
-```bash
-docker run -p 4000:4000 kraken_prices
+docker-compose up -d
 ```
 
 Visit [`localhost:4000`](http://localhost:4000) in your browser.
@@ -54,18 +57,19 @@ Visit [`localhost:4000`](http://localhost:4000) in your browser.
 
 The application consists of several key components:
 
+- `KrakenPrices.Application`: Main application supervisor that manages all processes
 - `KrakenPrices.Kraken.WebSocket`: Handles WebSocket connection to Kraken
-- `KrakenPrices.Kraken.API`: Manages REST API calls to fetch trading pairs
-- `KrakenPricesWeb.PriceLive.Index`: LiveView module for real-time price updates
+- `KrakenPricesWeb.PageLive`: Main LiveView module for real-time price updates and UI
+- `KrakenPrices.PubSub`: Manages real-time price updates distribution
+- `KrakenPricesWeb.Telemetry`: Handles application metrics and monitoring
 
-## License
+The application uses Phoenix LiveView for real-time updates without writing custom JavaScript. The UI is built with Tailwind CSS for a modern, responsive design.
 
-MIT
+## Development
 
-## Learn more
+The project includes several development tools:
 
-  * Official website: https://www.phoenixframework.org/
-  * Guides: https://hexdocs.pm/phoenix/overview.html
-  * Docs: https://hexdocs.pm/phoenix
-  * Forum: https://elixirforum.com/c/phoenix-forum
-  * Source: https://github.com/phoenixframework/phoenix
+- Credo for code consistency
+- Formatter for consistent code style
+- LiveDashboard for monitoring (available in development)
+- Swoosh for email preview in development
