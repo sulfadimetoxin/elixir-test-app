@@ -9,4 +9,5 @@ defmodule KrakenPricesWeb.ErrorJSONTest do
     assert KrakenPricesWeb.ErrorJSON.render("500.json", %{}) ==
              %{errors: %{detail: "Internal Server Error"}}
   end
+
 end
