@@ -35,5 +35,12 @@ jobs:
         restore-keys: ${{ runner.os }}-mix-
     - name: Install dependencies
       run: cd kraken_prices && mix deps.get
+    - name: Check formatting
+      run: cd kraken_prices && mix format --check-formatted
+    - name: Run credo
+      run: cd kraken_prices && mix credo --strict
+    - name: Run dialyzer
+      run: |
+        cd kraken_prices && mix dialyzer --halt-exit-status
     - name: Run tests
       run: cd kraken_prices && mix test
