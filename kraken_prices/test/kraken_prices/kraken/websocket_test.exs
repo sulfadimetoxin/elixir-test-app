@@ -5,10 +5,6 @@ defmodule KrakenPrices.Kraken.WebSocketTest do
 
   alias KrakenPrices.PubSubMock
 
-  # You'll likely need to mock WebSockex or use a test server
-  # For now, we'll focus on testing the logic within the callbacks
-  # assuming valid messages are received or functions are called.
-
   setup :verify_on_exit!
 
   setup do
