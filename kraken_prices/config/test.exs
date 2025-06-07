@@ -26,3 +26,6 @@ config :swoosh, :api_client, false
 # Enable helpful, but potentially expensive runtime checks
 config :phoenix_live_view,
   enable_expensive_runtime_checks: true
+
+# Configure Mox
+config :mox, :global, true

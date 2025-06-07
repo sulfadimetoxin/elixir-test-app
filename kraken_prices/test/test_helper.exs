@@ -1,4 +1,4 @@
 ExUnit.start()
 
-# Define the mock module for PubSub
+# Set up Mox for mocking
 Mox.defmock(KrakenPrices.PubSubMock, for: KrakenPrices.PubSubBehaviour)

@@ -2,6 +2,8 @@ defmodule KrakenPrices.Kraken.WebSocket do
   use WebSockex
   require Logger
 
+  alias KrakenPrices.PubSub
+
   @ws_url "wss://ws.kraken.com/v2"
   @max_retries 5
   @initial_backoff 1000  # 1 second
@@ -217,7 +219,7 @@ defmodule KrakenPrices.Kraken.WebSocket do
         change_pct: ticker["change_pct"]
       }
       # Logger.info("Broadcasting price update for #{ticker["symbol"]}: #{inspect(price_info)}")
-      KrakenPrices.PubSub.broadcast(KrakenPrices.PubSub, "kraken_prices", {:price_update, {ticker["symbol"], price_info, DateTime.utc_now()}})
+      PubSub.broadcast("price_updates", {:price_update, {ticker["symbol"], price_info, DateTime.utc_now()}})
     end)
 
     {:ok, state}
@@ -225,6 +227,12 @@ defmodule KrakenPrices.Kraken.WebSocket do
 
   defp handle_message(%{"error" => error}, state) do
     Logger.error("Received error from Kraken: #{inspect(error)}")
+    {:ok, state}
+  end
+
+  defp handle_message(%{"method" => "subscribe", "result" => %{"channelID" => channel_id, "channelName" => "ticker", "pair" => pair}}, state) do
+    Logger.info("Successfully subscribed to ticker for #{pair} on channel #{channel_id}")
+    PubSub.broadcast("price_updates", {:price_update, {pair, %{}, DateTime.utc_now()}})
     {:ok, state}
   end
 

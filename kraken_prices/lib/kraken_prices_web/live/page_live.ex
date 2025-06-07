@@ -2,16 +2,26 @@ defmodule KrakenPricesWeb.PageLive do
   use KrakenPricesWeb, :live_view
   require Logger
 
+  alias KrakenPrices.PubSub
+
   @per_page 12  # 4 rows of 3 cards
   @page_range 5  # Number of page links to show around current page
 
   @impl true
   def mount(_params, _session, socket) do
     if connected?(socket) do
-      KrakenPrices.PubSub.subscribe(KrakenPrices.PubSub, "kraken_prices")
+      PubSub.subscribe("price_updates")
     end
 
-    {:ok, assign(socket, prices: %{}, price_history: %{}, page: 1, pairs_order: [], pairs_set: MapSet.new())}
+    {:ok,
+     assign(socket,
+       prices: %{},
+       price_history: %{},
+       pairs_order: [],
+       pairs_set: MapSet.new(),
+       page: 1,
+       pairs: []
+     )}
   end
 
   @impl true
