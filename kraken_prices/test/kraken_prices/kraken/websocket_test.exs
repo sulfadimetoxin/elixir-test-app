@@ -24,28 +24,39 @@ defmodule KrakenPrices.Kraken.WebSocketTest do
   end
 
   test "handle_frame handles subscribe success for instrument channel" do
-    success_msg = Jason.encode!(%{
-      "method" => "subscribe",
-      "success" => true,
-      "result" => %{"channel" => "instrument"}
-    })
-    assert {:ok, state} = KrakenPrices.Kraken.WebSocket.handle_frame({:text, success_msg}, %{subscribed: false})
+    success_msg =
+      Jason.encode!(%{
+        "method" => "subscribe",
+        "success" => true,
+        "result" => %{"channel" => "instrument"}
+      })
+
+    assert {:ok, state} =
+             KrakenPrices.Kraken.WebSocket.handle_frame({:text, success_msg}, %{subscribed: false})
+
     assert state.subscribed == false
   end
 
   test "handle_frame handles subscribe success for ticker channel" do
-    success_msg = Jason.encode!(%{
-      "method" => "subscribe",
-      "success" => true,
-      "result" => %{"channel" => "ticker"}
-    })
-    assert {:ok, state} = KrakenPrices.Kraken.WebSocket.handle_frame({:text, success_msg}, %{subscribed: false})
+    success_msg =
+      Jason.encode!(%{
+        "method" => "subscribe",
+        "success" => true,
+        "result" => %{"channel" => "ticker"}
+      })
+
+    assert {:ok, state} =
+             KrakenPrices.Kraken.WebSocket.handle_frame({:text, success_msg}, %{subscribed: false})
+
     assert state.subscribed == false
   end
 
   test "handle_frame handles pong" do
     pong_msg = Jason.encode!(%{"method" => "pong"})
-    assert {:ok, state} = KrakenPrices.Kraken.WebSocket.handle_frame({:text, pong_msg}, %{subscribed: false})
+
+    assert {:ok, state} =
+             KrakenPrices.Kraken.WebSocket.handle_frame({:text, pong_msg}, %{subscribed: false})
+
     assert state.subscribed == false
   end
 
@@ -59,13 +70,21 @@ defmodule KrakenPrices.Kraken.WebSocketTest do
         ]
       }
     }
+
     state = %{
       subscribed: false,
       pending_pairs: [],
       pairs: [],
-      name: self()  # Use the test process as the name
+      # Use the test process as the name
+      name: self()
     }
-    assert {:ok, new_state} = KrakenPrices.Kraken.WebSocket.handle_frame({:text, Jason.encode!(instrument_data)}, state)
+
+    assert {:ok, new_state} =
+             KrakenPrices.Kraken.WebSocket.handle_frame(
+               {:text, Jason.encode!(instrument_data)},
+               state
+             )
+
     assert new_state.pending_pairs == ["XETHUSD", "XXBTUSD"]
     assert new_state.pairs == ["XETHUSD", "XXBTUSD"]
     assert new_state.subscribed == true
@@ -88,35 +107,59 @@ defmodule KrakenPrices.Kraken.WebSocketTest do
         }
       ]
     }
-    assert {:ok, state} = KrakenPrices.Kraken.WebSocket.handle_frame({:text, Jason.encode!(ticker_data)}, %{subscribed: false})
+
+    assert {:ok, state} =
+             KrakenPrices.Kraken.WebSocket.handle_frame({:text, Jason.encode!(ticker_data)}, %{
+               subscribed: false
+             })
+
     assert state.subscribed == false
   end
 
   test "handle_frame handles error" do
     error_msg = Jason.encode!(%{"error" => "Invalid subscription"})
-    assert {:ok, state} = KrakenPrices.Kraken.WebSocket.handle_frame({:text, error_msg}, %{subscribed: false})
+
+    assert {:ok, state} =
+             KrakenPrices.Kraken.WebSocket.handle_frame({:text, error_msg}, %{subscribed: false})
+
     assert state.subscribed == false
   end
 
   test "handle_info(:subscribe) sends instrument subscription" do
-    assert {:ok, state} = KrakenPrices.Kraken.WebSocket.handle_info(:subscribe, %{subscribed: false, name: :test_websocket})
+    assert {:ok, state} =
+             KrakenPrices.Kraken.WebSocket.handle_info(:subscribe, %{
+               subscribed: false,
+               name: :test_websocket
+             })
+
     assert state.subscribed == false
   end
 
   test "handle_info(:subscribe_next_batch) with empty pending pairs" do
-    assert {:ok, state} = KrakenPrices.Kraken.WebSocket.handle_info(:subscribe_next_batch, %{subscribed: false, pending_pairs: []})
+    assert {:ok, state} =
+             KrakenPrices.Kraken.WebSocket.handle_info(:subscribe_next_batch, %{
+               subscribed: false,
+               pending_pairs: []
+             })
+
     assert state.pending_pairs == []
   end
 
   test "handle_info(:subscribe_next_batch) with pending pairs" do
     pairs = Enum.map(1..25, &"PAIR#{&1}")
+
     state = %{
       subscribed: false,
       pending_pairs: pairs,
-      name: self()  # Use the test process as the name
+      # Use the test process as the name
+      name: self()
     }
-    assert {:ok, new_state} = KrakenPrices.Kraken.WebSocket.handle_info(:subscribe_next_batch, state)
-    assert length(new_state.pending_pairs) == 5  # 25 - 20 (batch_size)
+
+    assert {:ok, new_state} =
+             KrakenPrices.Kraken.WebSocket.handle_info(:subscribe_next_batch, state)
+
+    # 25 - 20 (batch_size)
+    assert length(new_state.pending_pairs) == 5
   end
 
   test "handle_info(:heartbeat) sends ping" do
@@ -125,28 +168,46 @@ defmodule KrakenPrices.Kraken.WebSocketTest do
       name: :test_websocket,
       last_heartbeat: DateTime.utc_now()
     }
+
     assert {:ok, new_state} = KrakenPrices.Kraken.WebSocket.handle_info(:heartbeat, state)
     assert new_state.subscribed == false
     assert DateTime.compare(new_state.last_heartbeat, state.last_heartbeat) == :gt
   end
 
   test "handle_disconnect with local reason" do
-    assert {:ok, state} = KrakenPrices.Kraken.WebSocket.handle_disconnect(%{reason: {:local, :normal}}, %{subscribed: false})
+    assert {:ok, state} =
+             KrakenPrices.Kraken.WebSocket.handle_disconnect(%{reason: {:local, :normal}}, %{
+               subscribed: false
+             })
+
     assert state.subscribed == false
   end
 
   test "handle_disconnect with rate limit" do
-    assert {:reconnect, state} = KrakenPrices.Kraken.WebSocket.handle_disconnect(%{reason: {:remote, 429}}, %{subscribed: false, retry_count: 0})
+    assert {:reconnect, state} =
+             KrakenPrices.Kraken.WebSocket.handle_disconnect(%{reason: {:remote, 429}}, %{
+               subscribed: false,
+               retry_count: 0
+             })
+
     assert state.retry_count == 1
   end
 
   test "handle_disconnect with remote closed" do
-    assert {:reconnect, state} = KrakenPrices.Kraken.WebSocket.handle_disconnect(%{reason: {:remote, :closed}}, %{subscribed: false})
+    assert {:reconnect, state} =
+             KrakenPrices.Kraken.WebSocket.handle_disconnect(%{reason: {:remote, :closed}}, %{
+               subscribed: false
+             })
+
     assert state.subscribed == false
   end
 
   test "handle_disconnect with other reason" do
-    assert {:reconnect, state} = KrakenPrices.Kraken.WebSocket.handle_disconnect(%{reason: :unknown}, %{subscribed: false})
+    assert {:reconnect, state} =
+             KrakenPrices.Kraken.WebSocket.handle_disconnect(%{reason: :unknown}, %{
+               subscribed: false
+             })
+
     assert state.subscribed == false
   end
 

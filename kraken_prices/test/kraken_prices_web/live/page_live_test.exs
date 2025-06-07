@@ -37,6 +37,7 @@ defmodule KrakenPricesWeb.PageLiveTest do
 
     # Simulate receiving a price update message
     pair = "ETH/USD"
+
     price_info = %{
       last: 2600.00,
       ask: 2600.10,
@@ -47,6 +48,7 @@ defmodule KrakenPricesWeb.PageLiveTest do
       change: 20.00,
       change_pct: 0.80
     }
+
     timestamp = DateTime.utc_now()
 
     # Send the message to the LiveView process
@@ -74,6 +76,7 @@ defmodule KrakenPricesWeb.PageLiveTest do
 
     # First update
     pair = "ETH/USD"
+
     price_info1 = %{
       last: 2600.00,
       ask: 2600.10,
@@ -84,6 +87,7 @@ defmodule KrakenPricesWeb.PageLiveTest do
       change: 20.00,
       change_pct: 0.80
     }
+
     timestamp1 = DateTime.utc_now()
     send(view.pid, {:price_update, {pair, price_info1, timestamp1}})
     assert render(view) =~ pair
@@ -99,6 +103,7 @@ defmodule KrakenPricesWeb.PageLiveTest do
       change: 21.00,
       change_pct: 0.81
     }
+
     timestamp2 = DateTime.utc_now()
     send(view.pid, {:price_update, {pair, price_info2, timestamp2}})
     assert render(view) =~ pair
@@ -119,6 +124,7 @@ defmodule KrakenPricesWeb.PageLiveTest do
 
     # Add 15 pairs (more than @per_page)
     pairs = Enum.map(1..15, &"PAIR#{&1}")
+
     Enum.each(pairs, fn pair ->
       price_info = %{
         last: 1000.00,
@@ -130,14 +136,17 @@ defmodule KrakenPricesWeb.PageLiveTest do
         change: 10.00,
         change_pct: 1.00
       }
+
       send(view.pid, {:price_update, {pair, price_info, DateTime.utc_now()}})
     end)
 
     # Verify first page content (should show pairs 1-12)
     rendered = render(view)
+
     Enum.each(1..12, fn n ->
       assert rendered =~ "PAIR#{n}"
     end)
+
     refute rendered =~ "PAIR13"
     refute rendered =~ "PAIR14"
     refute rendered =~ "PAIR15"
@@ -161,6 +170,7 @@ defmodule KrakenPricesWeb.PageLiveTest do
 
     # Add a pair with integer and float values
     pair = "ETH/USD"
+
     price_info = %{
       last: 2600,
       ask: 2600.12345,
@@ -171,6 +181,7 @@ defmodule KrakenPricesWeb.PageLiveTest do
       change: 20,
       change_pct: 0.8
     }
+
     send(view.pid, {:price_update, {pair, price_info, DateTime.utc_now()}})
     assert render(view) =~ pair
 
@@ -191,6 +202,7 @@ defmodule KrakenPricesWeb.PageLiveTest do
 
     # Add pairs in reverse order to test ordering
     pairs = ["PAIR3", "PAIR2", "PAIR1"]
+
     Enum.each(pairs, fn pair ->
       price_info = %{
         last: 1000.00,
@@ -202,6 +214,7 @@ defmodule KrakenPricesWeb.PageLiveTest do
         change: 10.00,
         change_pct: 1.00
       }
+
       send(view.pid, {:price_update, {pair, price_info, DateTime.utc_now()}})
     end)
 
@@ -214,9 +227,11 @@ defmodule KrakenPricesWeb.PageLiveTest do
     # Check that pairs appear in the correct order by verifying their relative positions
     # in the rendered HTML
     pairs = ["PAIR1", "PAIR2", "PAIR3"]
-    pairs_with_positions = Enum.map(pairs, fn pair ->
-      {pair, String.contains?(rendered, pair)}
-    end)
+
+    pairs_with_positions =
+      Enum.map(pairs, fn pair ->
+        {pair, String.contains?(rendered, pair)}
+      end)
 
     # Verify all pairs are present
     assert Enum.all?(pairs_with_positions, fn {_pair, present} -> present end)

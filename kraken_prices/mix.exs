@@ -62,7 +62,9 @@ defmodule KrakenPrices.MixProject do
       {:websockex, "~> 0.4.3"},
       {:httpoison, "~> 2.0"},
       {:mox, "~> 1.0", only: :test},
-      {:tzdata, "~> 1.1"}
+      {:tzdata, "~> 1.1"},
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
+      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false}
     ]
   end
 
